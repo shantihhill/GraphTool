@@ -1,0 +1,237 @@
+console.log("START ALL");
+
+var nodeCnt, edgeCnt;
+var edges = [];
+var nodes = [];
+var mapNd = {};
+
+var cnvNd = []; 
+
+//canvas initialization + constants;
+var ndRad = 30, edgLen;
+var cnvSz = 800, cnv, ctx;
+cnv = document.getElementById("myCanvas");	
+ctx = cnv.getContext("2d");
+cnv.width = cnvSz;
+cnv.height = cnvSz;
+var cx = cnvSz / 2, cy = cnvSz / 2, ct = 0;
+var ncF = 0.07, nnF = 50000000, eF = 500, fErr = 0.1;
+var ndEffRad = 160, dragF = 0.2, maxVel = 1, dragRate = 0.94; 
+var animId = null;
+//
+
+//calculate deltaTime
+var deltaTime = 1;
+var lastUpdate = Date.now();
+var myInterval = setInterval(tick, 0);
+function tick() {
+   var now = Date.now();
+   deltaTime = now - lastUpdate;
+   lastUpdate = now;
+	 console.log(deltaTime);
+}
+//
+console.log("deltaTime: " + deltaTime);
+
+updateGraphData();
+
+function distAB(x, y, a, b) {
+	return (x - a) * (x - a) + (y - b) * (y - b);
+}
+
+function forceNC(i) {
+	var dx = Math.abs(cnvNd[i].posX - cx);
+	var dy = Math.abs(cnvNd[i].posY - cy);
+
+	if (dx) {
+		var m = (cnvNd[i].posY - cy) / (cnvNd[i].posX - cx);
+		var ax = dx * ncF * (cnvNd[i].posX < cx ? 1 : -1) * deltaTime;
+		cnvNd[i].vX += ax; 
+		cnvNd[i].vY += m * ax;
+	}
+	else {
+		cnvNd[i].vY += dy * ncF * (cnvNd[i].posY < cy ? 1 : -1) * deltaTime;
+	}
+}
+
+function forceNN(i, j) { 	
+	var d = distAB(cnvNd[i].posX, cnvNd[i].posY, cnvNd[j].posX, cnvNd[j].posY);	
+	//if (d > ndEffRad * ndEffRad)	return;
+	if (d < 1) {
+		cnvNd[i].vX = Math.random() * cnvSz;	
+		cnvNd[i].vY = Math.random() * cnvSz;	
+	}
+	var dx = Math.abs(cnvNd[i].posX - cnvNd[j].posX);
+	var dy = Math.abs(cnvNd[i].posY - cnvNd[j].posY);
+	if (dx) {
+		var m = (cnvNd[i].posY - cnvNd[j].posY) / (cnvNd[i].posX - cnvNd[j].posX); 
+		var ax = -(cnvNd[i].posX < cnvNd[j].posX ? 1 : -1) * nnF / d / d * deltaTime;
+		cnvNd[i].vX += ax;
+		cnvNd[i].vY += m * ax;
+	}
+	else {
+		var ay = -(cnvNd[i].posY < cnvNd[j].posY ? 1 : -1) * nnF / d / d * deltaTime;	
+		cnvNd[i].vY += ay;
+	}
+}
+
+function checkGoAnim() {
+	for (var i = 0; i < nodeCnt; i++) {
+		var dd = distAB(0, 0, cnvNd[i].vX, cnvNd[i].vY); 
+		console.log("mag: " + dd);
+		if (dd > fErr) {
+			return true;
+		}
+	}
+	return false;
+}
+
+function updateNodePos(i) {
+	var dd = distAB(0, 0, cnvNd[i].vX, cnvNd[i].vY); 
+	cnvNd[i].posX += cnvNd[i].vX;
+	cnvNd[i].posY += cnvNd[i].vY;
+	if (cnvNd[i].posX >= cnvSz)	{
+		cnvNd[i].posX = cnvSz;
+		cnvNd[i].vX = 0;
+	}
+	if (cnvNd[i].posY >= cnvSz) {
+		cnvNd[i].posY = cnvSz;
+		cnvNd[i].vY = 0;
+	}
+	if (cnvNd[i].posX <= 0) {
+		cnvNd[i].posX = 0;
+		cnvNd[i].vX = 0;
+	}
+	if (cnvNd[i].posY <= 0) {
+		cnvNd[i].posY = 0;
+		cnvNd[i].vY = 0;
+	}
+}
+
+function calcNodeVect() {
+	for (var i = 0; i < nodeCnt; i++) {
+		if (cnvNd[i].vX == undefined)	cnvNd[i].vX = 0;
+		if (cnvNd[i].vY == undefined)	cnvNd[i].vY = 0;
+		forceNC(i);
+		for (var j = 0; j < nodeCnt; j++)
+			if (i != j) {
+				forceNN(i, j);
+			}
+		
+		cnvNd[i].vX *= dragRate;
+		cnvNd[i].vY *= dragRate;
+	
+		if (Math.abs(cnvNd[i].vX) > maxVel || Math.abs(cnvNd[i].vY) > maxVel) {
+			var m = maxVel / Math.max(Math.abs(cnvNd[i].vX), Math.abs(cnvNd[i].vY));
+			cnvNd[i].vX *= m;
+			cnvNd[i].vY *= m;	
+		}
+	}
+}
+
+function drawGraph() {
+
+	ctx.font = "30px Monospace";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";	
+
+	for (var i = 0; i < nodeCnt; i++) {
+		ctx.beginPath();
+		ctx.arc(cnvNd[i].posX, cnvNd[i].posY, ndRad, 0, 2 * Math.PI);	
+		ctx.stroke();	
+		ctx.fillText(nodes[i], cnvNd[i].posX, cnvNd[i].posY);
+	}
+}
+
+function animate() {
+
+	ctx.clearRect(0, 0, cnv.width, cnv.height);	
+	calcNodeVect();
+	for (var i = 0; i < nodeCnt; i++)
+		updateNodePos(i);
+	drawGraph();
+
+	ct++;
+	console.log("end" + ct);
+		
+	if (!checkGoAnim())	return; 
+	animId = requestAnimationFrame(animate);
+	
+	return;
+}
+
+function makeGraph() {
+	
+	console.log("makeGraph");
+
+
+	document.getElementById("nodeCount").value = nodeCnt;
+	for (var i = 0; i < nodeCnt; i++) {
+		
+		cnvNd[i] = new Object();
+		cnvNd[i].posX = Math.random() * cnvSz;	
+		cnvNd[i].posY = Math.random() * cnvSz;	
+	}
+	
+	animate();
+
+	console.log("END makeGraph");
+}
+
+function updateGraphData() {
+	console.log("updateGraphData");
+	var txt = document.getElementById("graphData").value;
+	edges = [];
+	nodes = [];
+	mapNd = {};
+	var eC = 0, nC = 0, nrCnt = 0, str = "";
+	edges[eC] = new Object();	
+	for (var i = 0; i < txt.length; i++) {
+		if (txt[i] != ' ' && txt[i] != '\n') {
+			str += txt[i];
+		}
+		if (txt[i] == ' ' || i + 1 == txt.length || txt[i] == '\n') {
+			if (str.length) {
+				nrCnt++;
+				if (nrCnt == 1) {
+					edges[eC].first = str;
+				}
+				if (nrCnt == 2) {
+					edges[eC].second = str;
+				}
+				if (nrCnt == 3) {
+					edges[eC].leng = str;
+				}
+				if (nrCnt <= 2 && mapNd[str] == undefined) {
+					mapNd[str] = nC;
+					nodes[nC] = str;
+					nC++;
+				}
+				str = "";
+			}
+			if ((txt[i] == '\n' || i + 1 == txt.length) && nrCnt) {
+				eC++;
+				edges[eC] = new Object();
+				nrCnt = 0;
+			}
+		}
+	}
+	if (edges[eC].first != undefined)	eC++;
+	
+	console.log("am modificat datele grafului");	
+	console.log("noduri si mucii \n");
+	console.log(nC + '\n');	
+	console.log(eC + '\n');	
+	console.log("hsi sa vedem muchiiile");
+	for (var i = 0; i < eC; i++) {
+		console.log(edges[i].first + ' ' + edges[i].second + ' ' + edges[i].leng);	
+	}
+
+	nodeCnt = nC;
+	edgeCnt = eC;	
+	makeGraph();
+
+	console.log("END updateGraphData");
+}
+
+
