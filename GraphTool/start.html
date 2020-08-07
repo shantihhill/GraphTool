@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	
+<title> Graph Tool </title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css"/>
+<script src="jquery-3.5.1.js"></script>
+
+</head>
+
+<body>
+
+<header>
+	<p style="text-align:center;font-size:3vw;color:white;">Graph Tool<p>
+</header> 
+<div class="mainBody"> 
+	<div class="centerBody">
+		<div class="commands">
+			<div class="buttonGroupComm">
+				<button class="buttonComm" type="button" onclick="selectGravity()"> Gravity </button>		
+				<button class="buttonComm" type="button" onclick="selectEdit()"> Edit </button>	
+				<button class="buttonComm" type="button"> Draw </button>		
+				<button class="buttonComm" type="button"> Delete </button>		
+			</div>
+			<div class="buttonGroupComm">
+				<button class="buttonComm" type="button" onclick="makeDirected()"> Directed </button>		
+				<button class="buttonComm" type="button" onclick="makeUndirected()"> Uniderected </button>		
+			</div>
+			<div class="buttonGroupComm">
+				<button class="buttonComm" type="button" onclick="fixAll()"> Fix all </button>		
+				<button class="buttonComm" type="button" onclick="unfixAll()"> Unfix all </button>		
+			</div>
+			<div class="buttonGroupComm">
+				<button class="buttonComm" type="button" onclick="selectPaths()"> Paths </button>		
+				<button class="buttonComm" type="button" onclick="selectHighLight()"> Highlight </button>		
+				<button class="buttonComm" type="button" onclick="selectSort()"> Sort </button>		
+				<button class="buttonComm" type="button" onclick="selectConfig()"> Config </button>		
+			</div>	
+		</div>
+
+		<div class="makeGraph">
+			<label class="configInput" for="nodeCount">Node count:</label>
+			<br>
+			<input type="number" class="configInput" style="font-size:1.5vw" id="nodeCount">
+			<br>
+			<label class="configInput" for="graphData">Graph data:</label>
+			<br>
+			<textarea id="graphData" class="graphData" wrap="off" id="graphData" onkeyup="updateGraphData()">1 2
+1 3
+1 4
+4 5
+5 6
+6 7
+7 4
+6 8
+</textarea>
+		</div>
+
+		<div class="viewGraph">
+			<input type="text" id="inputBox" class="canvasInput hidden" onkeyup="hitEnterEsc(event)">
+			<canvas id="myCanvas" onmousemove="updateMousePos(event)" onclick="clickNode()" onmousedown="mouseDown()" onmouseleave="mouseLeaveCnv()">
+			</canvas>
+		</div>
+
+		<div class="pathGraph">
+			<div class="infoBox">
+				
+				<div class="gravityTab" id="gravityTab">
+					<h3> Gravity Mode </h3>	
+					<br>
+					<p> In gravity mode, nodes react to different forces, acting like objects in space. Every node is attracted to the center, while being repelled by other vertices. Edges act like springs, aiming for an ideal length, affecting the adjacent nodes.
+					</p>
+					<br>
+					<p> Ways to interact with the graph: </p>
+					<br>
+					<ul>
+						<li> Drag and Drop nodes in canvas.</li>	
+						<li> Click to fix/unfix a nodes position.</li>
+					</ul>
+				</div>
+
+				<div class="editTab hidden" id="editTab">
+					<h3> Edit Mode </h3>
+					<br>
+					<p> Salut ba pula asta e edit mode</p>
+				</div>
+
+				<div class="pathTab hidden" id="pathTab">
+					<p style="margin-left: 1vw;">Select a node as root.</p>
+					<div class="buttonGroupInfo" style="float:none;">
+						<button class="buttonInfo" type="button"> Breath-First-Search </button>		
+					</div>
+					<div class="buttonGroupInfo" style="float:none;">
+						<button class="buttonInfo" type="button"> Depth-First-Search </button>		
+					</div>
+					<div class="buttonGroupInfo" style="float:none;" onclick="addRandomLengths()">
+						<button class="buttonInfo" type="button"> Add random lengths </button>		
+					</div>
+					<div class="buttonGroupInfo" style="float:none;">
+						<button class="buttonInfo" type="button"> Dijkstra's Algorithm </button>		
+					</div>
+					<div class="buttonGroupInfo" style="float:none;">
+						<button class="buttonInfo" type="button"> Bellman-Ford Algorithm </button>		
+					</div>
+					<br>
+					<label for="myRange" style="font-size:1.05vw; margin-left:1vw;">Path speed: </label>
+					<br>
+					<input type="range" min="0" max="100" value="50" style="width:16vw; margin-left:1vw;" id="myRange">
+				</div>
+
+				<div class="highlightTab hidden" id="highlightTab">
+					<div class="buttonGroupInfo">
+						<button class="buttonInfo" type="button"> Critical edges </button>		
+					</div>
+					<div class="buttonGroupInfo">
+						<button class="buttonInfo" type="button"> Connected components </button>		
+					</div>			
+					<div class="buttonGroupInfo">
+						<button class="buttonInfo" type="button"> Biconnected components </button>		
+					</div>
+					<div class="buttonGroupInfo">
+						<button class="buttonInfo" type="button"> Strongly connected components </button>
+					</div>
+				</div>
+
+				<div class="sortTab hidden" id="sortTab">
+					<div class="buttonGroupInfo">
+						<button class="buttonInfo" type="button"> Tree </button>		
+					</div>
+					<div class="buttonGroupInfo">
+						<button class="buttonInfo" type="button" onclick="sortShuffle()"> Shuffle </button>		
+					</div>			
+					<div class="buttonGroupInfo">
+						<button class="buttonInfo" type="button"> Topological sort </button>		
+					</div>
+				</div>
+
+				<div class="configTab hidden" id="configTab">
+					<label class="configInput" for="nodeSize">Node size:</label>											
+					<input type="text" id="nodeSize" class="configInput" value="30" onkeyup="updateNodeSize()">
+					<br>
+					<br>
+					<label class="configInput" for="edgeLength">Edge length</label>											
+					<input type="text" id="edgeLength" class="configInput" value="150" onkeyup="updateEdgeIdealLength()" >
+					<br>
+					<br>
+					<label class="configInput" for="nodeBackColor">Node background color:</label>
+					<select class="configSelect" id="nodeBackColor" value="white">
+						<option value="White">White</option>
+						<option value="Black">Black</option>	
+						<option value="Red">Red</option>	
+						<option value="Orange">Orange</option>	
+						<option value="Yellow">Yellow</option>	
+						<option value="Green">Green</option>	
+						<option value="Blue">Blue</option>	
+						<option value="Violet">Violet</option>	
+					</select>	
+					<br>
+					<br>
+					<label class="configInput" for="nodeColor">Node color:</label>
+					<select name="nodeColor" id="nodeColor">
+						<option value="Black">Black</option>	
+						<option value="White">White</option>
+						<option value="Red">Red</option>	
+						<option value="Orange">Orange</option>	
+						<option value="Yellow">Yellow</option>	
+						<option value="Green">Green</option>	
+						<option value="Blue">Blue</option>	
+						<option value="Violet">Violet</option>	
+					</select>	
+				</div>	
+			</div>	
+		</div>
+</div>
+
+<footer></footer>
+
+<script src="script.js"></script>
+
+</body>
+</html> 

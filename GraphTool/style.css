@@ -1,0 +1,190 @@
+* {
+	box-sizing: border-box;
+	font-family: monospace;
+	letter-spacing: 0.01em;
+	margin: 0;
+	padding: 0;
+	overflow: auto;
+	list-style-position: inside;
+	list-style-type: square;
+}
+body {
+	background-color: grey;
+}
+header {
+	background-color: blue;
+	width: 100%;
+	padding: 1vh;
+}
+footer {
+	position: fixed;
+	bottom: 0px;
+	background-color: blue;
+	width: 100%;
+	height: 5vh;
+}
+p {
+	font-size: 1.05vw;
+}
+ul {
+	font-size: 1.05vw;
+	margin-left: 2vw;
+}
+.mainBody {
+	background-color: brown;
+	width: 100%;
+	height: 100vh;
+}
+.centerBody {
+	background-color: purple;
+	position: absolute;
+	left: 5%;
+	width: 90%;
+	height: 100vh;
+}
+.makeGraph {
+	display: block;
+	float: left;
+	background-color: red;
+	width: 25%;
+	height: 100vh;
+	padding: 1vw;
+	padding-left: 3vw;
+	font-size: 1.5vw;
+}
+.viewGraph {
+	float: left;
+	background-color: yellow;
+	position: relative;
+	width: 45%;
+	height: 100vh;
+	padding-top: 1vw;
+}
+.pathGraph {
+	float: left;
+	background-color: green;
+	width: 30%;
+	height: 100vh;
+}
+.buttonGroupComm {
+	float: left;
+	display: block;
+	width: auto;
+	margin: 1.45vw;
+	margin-right: 0vw;
+	margin-bottom: 0;
+	background-color: green;
+	padding: 0.5vw;
+	border-radius: 1vw;
+	border: 0;
+	font-size: 0;
+}
+.buttonGroupInfo {
+	display: block;
+	width: auto;
+	margin: 0.8vw;
+	margin-right: 0vw;
+	margin-bottom: 0;
+	background-color: green;
+	padding: 0.3vw;
+	border-radius: 1vw;
+	border: 0;
+	font-size: 0;
+	text-align: center;
+}
+.buttonComm {
+	background-color: grey;
+	font-size: 1.20vw;
+	color: white;
+	padding: 0.75vw;
+	border: 0;
+	margin: 0;
+	width: auto;
+	border-radius: 0.5vw;
+	transition-duration: 0.4s;
+	outline: 0;
+}
+.buttonInfo {
+	background-color: grey;
+	font-size: 1.05vw;
+	color: white;
+	padding: 0.50vw;
+	border: 0;
+	margin: 0;
+	width: 100%;
+	border-radius: 0.5vw;
+	transition-duration: 0.4s;
+	outline: 0;
+}
+button:hover {
+	background-color: black;
+	color: white;
+}
+.commands {
+	background-color: orange;
+	height: auto;
+	padding-bottom: 1vw;
+	padding-left: 1.5vw;
+	margin: 0;
+	width: 100%;
+}
+canvas {
+	display: block;
+	background-color: white;
+	border-radius: 1vw;
+	border-color: black;
+	border: 2px solid black;
+	width: 40vw;
+	height: 40vw;
+	margin-top: 0vw;
+}
+input {
+	width: 10vw;
+	outline: 0;
+}
+.graphData {
+	font-size: 1.5vw;
+	width: 12vw;
+	height: 22vw;
+	outline: 0;
+	resize: none;
+}
+.canvasInput {
+	width: 4vw;
+	outline: 0;
+	z-index: 101;
+	position: absolute;
+	font-size: 1.5vw;
+	overflow: visible;
+	top: 1vw;
+	left: 0vw;
+}
+.infoBox {
+	background-color: white;
+	margin: 2vw;
+	padding: 1vw;
+	border: 2px solid black;
+	border-radius: 1vw;
+	margin-top: 1vw;
+	width: 24vw;
+	height: 40vw;
+	font-size: 1.5vw;
+}
+.hidden {
+	display: none;
+}
+.configInput {
+	font-size: 1.05vw;
+	width: 7vw;	
+	overflow: visible;
+	height: auto;
+}
+.graphInput {
+	overflow: visible;
+}
+.configSelect {
+
+
+}
+
+
