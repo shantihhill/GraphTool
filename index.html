@@ -47,14 +47,14 @@
 			<br>
 			<label class="configInput" for="graphData">Graph data:</label>
 			<br>
-			<textarea id="graphData" class="graphData" wrap="off" id="graphData" onkeyup="updateGraphData()">1 2
-1 3
-1 4
-4 5
-5 6
-6 7
-7 4
-6 8
+			<textarea id="graphData" class="graphData" wrap="off" id="graphData" onkeyup="updateGraphData()">1 2 
+1 3 
+1 4 
+4 5 
+5 6 
+6 7 
+7 4 
+6 8 
 </textarea>
 		</div>
 
@@ -132,29 +132,29 @@
 					<p class="halfBr"></p>
 					<p> Lenght status: <span id="lengthStatus"></span></p>
 					<div class="buttonGroupInfo" style="float:none;">
-						<button class="buttonInfo" type="button"> Breath-First-Search </button>		
+						<button class="buttonInfo" type="button" onclick="pathBFS()"> Breath-First-Search </button>		
 					</div>
 					<div class="buttonGroupInfo" style="float:none;">
-						<button class="buttonInfo" type="button"> Depth-First-Search </button>		
+						<button class="buttonInfo" type="button" onclick="pathDFS()"> Depth-First-Search </button>		
 					</div>
 					<p class="halfBr"></p>
 					<p> Lenght status: <span id="lengthStatus2"></span></p>
 					<div class="buttonGroupInfo" style="float:none;">
-						<button class="buttonInfo" type="button"> Dijkstra's Algorithm </button>		
+						<button class="buttonInfo" type="button" onclick="pathDJK()"> Dijkstra's Algorithm </button>		
 					</div>
 					<div class="buttonGroupInfo" style="float:none;">
-						<button class="buttonInfo" type="button"> Bellman-Ford Algorithm </button>		
+						<button class="buttonInfo" type="button" onclick="pathMF()"> Maximum Flow Algorithm </button>		
 					</div>
 					<p class="halfBr"></p>
 					<div class="buttonGroupPlayer">
-						<button class="buttonPlayer" type="button"> Undo </button>
-						<button class="buttonPlayer" type="button"> Play </button>
+						<button class="buttonPlayer" type="button" onclick="undoOp()"> Undo </button>
+						<button class="buttonPlayer" id="playButt" type="button" onclick="butPlayPause()">Pause</button>
 					</div>
 					<p class="halfBr"></p>
 					<label for="myRange" style="font-size:1.05vw; margin-left:1vw;">Path speed: </label>
 					<br>
 					<p class="halfBr"></p>
-					<input type="range" min="0" max="100" value="50" style="width:10vw;margin-left:1vw;float:left;" id="myRange">
+					<input type="range" min="0" max="100" value="25" style="width:10vw;margin-left:1vw;float:left;" id="myRange" oninput="setFrameRate()">
 				</div>
 
 				<div class="highlightTab hidden" id="highlightTab">

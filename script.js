@@ -23,21 +23,31 @@ var cx = cnvSz / 2, cy = cnvSz / 2, ct = 0;
 var ncF = 0.0008, nnF = 100000, edF = 0.003, fErr = 0.00001, edDistErr = 15;
 var ndEffRad = 160, dragF = 0.2, maxVel = 5, dragRate = 0.96; 
 var FPS = 100, fpsInterval, now, then, elapsed;
-var maxNodeRad = 100;
+var maxNodeRad = 100, maxLeng = 1000000;
 
 //for highlight, paths, tree
-var nrEd = [], vecNd = [], vecEd = [], seen = [], height = [], leaf = [];
-var above = [], colorSet = [], stkEd = [], stkNd = [], estq = [], low = [];
-var shuffle = [];
+var nrEd = [], vecNd = [], vecEd = [], seen = [], zEd = [], height = [], leaf = [];
+var above = [], colorSet = [], stkEd = [], stkNd = [], estq = [], low = [], dist = [];
+var shuffle = [], edMF = [], dad = [];
 var stepX, stepY, nrLeaf, topN, stkEdTp, stkNdTp, nrC;
-var mnCC = 0, mxCC = 321, playPath, currOp, nrOp;
+var mnCC = 0, mxCC = 321, pathPlay = 1, crrOp = 0, nrOp;
 var pathOpQue = [];
+var firstCol = "#FF0000", secondCol = "#00FF00", pathMode = 0, pathAlg, sMF, fMF;
+var FPS2 = 1.5, fpsInterval2, now2, then2, elapsed2, minFPS2 = 0.5, maxFPS2 = 8;
 
 timeLoop();
 
 updateGraphData();
 
+graphInputUpdate();
+
 makeUndirected();
+
+setFrameRate();
+
+function isNumeric(value) {
+	return /^\d+$/.test(value);
+}
 
 function updateMousePos(evt) {
 	var rect = cnv.getBoundingClientRect();
@@ -290,6 +300,7 @@ function deleteNode(id) {
 		nodes[i].grab = nodes[i + 1].grab;
 		nodes[i].type = nodes[i + 1].type;
 		nodes[i].fix = nodes[i + 1].fix;
+		nodes[i].color = nodes[i + 1].color;
 		mapNd[nodes[i].name] = i;
 	}
 	nodeCnt--;
@@ -304,9 +315,9 @@ function deleteNode(id) {
 function graphInputUpdate() {
 	var txt = "";
 	for (var i = 0; i < edgeCnt; i++) {
-		if (edges[i].first	!= undefined)	txt += edges[i].first + " ";
-		if (edges[i].second != undefined) txt += edges[i].second + " ";
-		if (edges[i].leng != undefined)	txt += edges[i].leng;
+		if (edges[i].first	!= undefined)	txt += edges[i].first;
+		if (edges[i].second != undefined) txt += " " + edges[i].second;
+		if (edges[i].leng != undefined)	txt += " " + edges[i].leng;
 		txt += "\n";
 	}
 	document.getElementById("graphData").value = txt;
@@ -317,6 +328,7 @@ function graphInputUpdate() {
 }
 
 function addRandomLengths() {
+	resetPlayer();
 	for (var i = 0; i < edgeCnt; i++) {
 		edges[i].leng = parseInt(Math.random() *	randLenInt);
 	}
@@ -324,6 +336,7 @@ function addRandomLengths() {
 }
 
 function removeRandomLengths() {
+	resetPlayer();
 	for (var i = 0; i < edgeCnt; i++) {
 		edges[i].leng = undefined;
 	}
@@ -365,12 +378,11 @@ function makeNodeList() {
 function checkIsLenght() {
 	var ok = 0;
 	for (var i = 0; i < edgeCnt; i++) {
-		if (edges[i].leng != undefined) {
+		if (edges[i].leng != undefined && edges[i].leng != "") {
 			ok = 1;
 			break;
 		}
 	}
-	console.log("salut fratiwe: " + ok);
 	if (ok) {
 		document.getElementById("lengthStatus").innerHTML = "REMOVE LENGHTS";
 		document.getElementById("lengthStatus").style.color = "red";
@@ -546,6 +558,11 @@ function sortTopological() {
 function edgeColorReset() {
 	for (var i = 0; i < edgeCnt; i++)
 		edges[i].color = "black";
+}
+function nodeColorReset() {
+	for (var i = 0; i < nodeCnt; i++) {
+		nodes[i].color = "black";
+	}
 }
 
 function addEdgeColor(nrCol) {
@@ -789,43 +806,327 @@ function addPathOp(name, id, color) {
 	pathOpQue[nrOp].color = color;	
 }
 
-function DFS(n) {
+function DFS(n, edId) {
 	seen[n] = 1;
+	addPathOp("node", n, firstCol);
 	for (var i = 0; i < nrEd[n]; i++) {
 		var x = vecNd[n][i];
-		if (seen[x])	continue;
-		DFS(x);
+		var y = vecEd[n][i];
+		if (y == edId)	continue;
+
+		if (!seen[x]) {
+			addPathOp("edge", y, firstCol);	
+			DFS(x, y);
+			addPathOp("edge", y, secondCol);
+		}
 	}
+	addPathOp("node", n, secondCol);
 }
 
 function pathDFS() {
 	if (document.getElementById("lengthStatus").style.color == "red")	return;	
+	resetPlayer();
 	makeNodeList();	
-	nrOp = 0;
+	pathAlg = "DFS";
 	for (var i = 0; i < nodeCnt; i++) {
-		seen[i];
+		seen[i] = 0;
 	}
-	for (var i = 0; i < nodeCnt; i++) {
-		if (!seen[i]) {
-			DFS(i);
+	for (var i = 0; i < edgeCnt; i++) {
+		zEd[i] = 0;
+	}
+}
+
+function BFS(n) {
+	var queBFS = [], queN = 0, crrN = 1;
+	queBFS[++queN] = new Object();
+	queBFS[queN].x = n;
+	queBFS[queN].y = -1;
+	seen[n] = 1;
+	addPathOp("node", n, firstCol);
+	while (crrN <= queN) {
+		var x = queBFS[crrN].x;
+		var y = queBFS[crrN].y;
+		if (y != -1)	addPathOp("edge", y, secondCol);
+		addPathOp("node", x, secondCol);
+		crrN++;
+		for (var i = 0; i < nrEd[x]; i++) {
+			var nx = vecNd[x][i];
+			var	ny = vecEd[x][i]; 
+			if (!seen[nx]) {
+				queBFS[++queN] = new Object;
+				queBFS[queN].x = nx;
+				queBFS[queN].y = ny;
+				seen[nx] = 1;
+				addPathOp("edge", ny, firstCol);
+				addPathOp("node", nx, firstCol);
+			}
 		}
 	}
 }
 
-function drawNextOp() {
-	
+function pathBFS() {
+	if (document.getElementById("lengthStatus").style.color == "red")	return;	
+	resetPlayer();
+	makeNodeList();
+	pathAlg = "BFS";
+	for (var i = 0; i < nodeCnt; i++) {
+		seen[i] = 0;		
+	}
+}
+
+function DJK(n) {
+	var ok = 1, queN = 0, mnDis = maxInt, idDis = -1;
+	estq[n] = ++queN;
+	dist[n] = 0;
+	zEd[n] = -1;
+	addPathOp("node", n, firstCol);	
+	while (ok) {
+		ok = 0;
+		mnDis = maxInt;	
+		for (var i = 0; i < nodeCnt; i++) {
+			if (low[i])	continue;
+			if (!estq[i])	continue;
+			if (dist[i] < mnDis)	{
+				mnDis = dist[i];
+				idDis = i;	
+				ok = 1;
+			}
+			else if (dist[i] == mnDis && estq[i] < estq[idDis]) {
+				idDis = i;	
+			}
+		}
+		if (!ok)	break;	
+
+		var x = idDis;
+		low[x] = 1;
+		if (zEd[x] != -1)	addPathOp("edge", zEd[x], secondCol);	
+		addPathOp("node", x, secondCol);
+
+		for (var i = 0; i < nrEd[x]; i++) {
+			var vx = vecNd[x][i];
+			var vy = vecEd[x][i];	
+			var vz = dist[x] + parseInt(edges[vy].leng);
+			console.log("incercam: " + vx + " d: " + vz + " dd: " + dist[vx] + " estq: " + estq[vx]);
+			if (low[vx])	continue;
+			if (estq[vx] == maxInt)	{
+				estq[vx] = ++queN;	
+				addPathOp("edge", vy, firstCol);
+				addPathOp("node", vx, firstCol);
+			}
+			if (vz < dist[vx]) {
+				dist[vx] = vz;
+				zEd[vx] = vy;
+			}
+			console.log("incercam: " + vx + " d: " + vz + " dd: " + dist[vx] + " estq: " + estq[vx]);
+		}
+	}
+}
+
+function pathDJK() {
+	if (document.getElementById("lengthStatus").style.color == "green") return;	
+	resetPlayer();
+	makeNodeList();
+	pathAlg = "DJK";
+	for (var i = 0; i < nodeCnt; i++) {
+		seen[i] = 0;
+		dist[i] = maxInt;
+		estq[i] = maxInt;
+		low[i] = 0;
+		zEd[i] = 0;
+	}
+}
+
+function buildMF(s, f) {
+	var queMF = [], n0 = 1, n1 = 0; 	
+	for (var i = 0; i < nodeCnt; i++) {
+		dad[i] = -1;
+		zEd[i] = -1;
+	}
+	queMF[++n1] = s;
+	dad[s] = s;
+	while (n0 <= n1) {
+		var x = queMF[n0];
+		n0++;
+		for (var i = 0; i < nrEd[x]; i++) {
+			var vx = vecNd[x][i];
+			if (edMF[x][vx] == 0)	continue;
+			if (dad[vx] == -1) {
+				dad[vx] = x;
+				zEd[vx] = vecEd[x][i];
+				queMF[++n1] = vx;
+			}
+		}
+	}
+	if (dad[f] != -1)	return 1;
+	return 0;
+}
+
+function updateMF(s, f) {
+	var x = f, x0 = 0, z, mn = maxInt;
+	while (x != s) {
+		x0 = dad[x];	
+		low[x0] = x;
+		mn = Math.min(mn, edMF[x0][x]);
+		x = x0;
+	}
+	if (mn == 0)	return;
+	x = f;
+	addPathOp("node", f, firstCol);
+	while (x != s) {
+		x0 = dad[x];
+		addPathOp("edge", zEd[x], firstCol);
+		addPathOp("node", x0, firstCol);
+		x = x0;
+	}
+	x = s;
+	addPathOp("node", s, secondCol);
+	while (x != f) {
+		x0 = x;
+		x = low[x];
+		edMF[x0][x] -= mn;
+		addPathOp("edMF", zEd[x], mn); 
+		addPathOp("node", x, secondCol);
+	}
+	//addPathOp("rest");
+}
+
+function MF(s, f) {
+	while (buildMF(s, f)) {
+		for (var i = 0; i < nrEd[f]; i++) {
+			dad[f] = vecNd[f][i];
+			updateMF(s, f);
+		}
+	}
+}
+
+function pathMF() {
+	if (document.getElementById("lengthStatus").style.color == "green")	return;
+	resetPlayer();
+	makeNodeList();
+	pathAlg = "MF";
+	sMF = -1;
+	fMF = -1;
+	for (var i = 0; i < nodeCnt; i++) {
+		seen[i] = 0;
+		edMF[i] = [];
+		for (var j = 0; j < nodeCnt; j++) {
+			edMF[i][j] = 0;
+		}
+	}
+	for (var i = 0; i < edgeCnt; i++) {
+		newEdges[i].leng = edges[i].leng;
+		var x1 = mapNd[edges[i].first], x2 = mapNd[edges[i].second];
+		if (edges[i].leng == undefined || edges[i].leng.length == 0)	edMF[x1][x2] = 0;
+		else edMF[x1][x2] = parseInt(edges[i].leng);
+		if (!directed) {
+			edMF[x2][x1] = edMF[x1][x2];
+		}
+	}
+
+	for (var i = 0; i < nodeCnt; i++) {
+		for (var j = 0; j < nodeCnt; j++) {
+			console.log(edMF[i][j]);
+		}
+	}
+}
+
+function butPlayPause() {
+	pathPlay ^= 1;
+	var btt = document.getElementById("playButt");
+	btt.innerHTML = (pathPlay) ? "Pause" : "Play";
+}
+
+function nextOp() {
+	crrOp++;	
+	var name = pathOpQue[crrOp].name, id = pathOpQue[crrOp].id, color = pathOpQue[crrOp].color;
+	if (name == "node") {
+		nodes[id].color = color;
+		return;
+	} else if (name == "edge") {
+		edges[id].color = color;
+		return;
+	} else if (name == "edMF") {
+		edges[id].color = secondCol;
+		edges[id].leng -= color;
+	}
 }
 
 function undoOp() {
+	if (crrOp <= 0) {
+		crrOp = 0;
+		return;
+	}
+	var name = pathOpQue[crrOp].name, id = pathOpQue[crrOp].id, color = pathOpQue[crrOp].color;
+	if (name == "node") {
+		if (nodes[id].color == firstCol)	nodes[id].color = "black";
+		if (nodes[id].color == secondCol)	nodes[id].color = firstCol;
+	} else if (name == "edge") {
+		if (edges[id].color == firstCol)	edges[id].color = "black";
+		if (edges[id].color == secondCol)	edges[id].color = firstCol;
+	} else if (name == "edMF") {
+		edges[id].color = firstCol;
+		edges[id].leng += color;
+	}
+	crrOp--;
+	if (crrOp < 0)	crrOp = 0;
+	startAnimatePath();
+}
 
+function resetPlayer() {
+	nrOp = 0;
+	crrOp = 0;
+	edgeColorReset();
+	nodeColorReset();
+	if (pathAlg == "MF") {
+		pathAlg = "";
+		for (var i = 0; i < edgeCnt; i++) {
+			edges[i].leng = newEdges[i].leng;
+		}
+		graphInputUpdate();	
+	}
+}
+
+function setFrameRate() {
+	//change FPS2
+	var x = parseInt(document.getElementById("myRange").value) / 100;
+	FPS2 = minFPS2 + (maxFPS2 - minFPS2) * x; 
+	startAnimatePath();
+}
+
+function startAnimatePath() {
+	fpsInterval2 = 1000 / FPS2;
+	then2 = Date.now();
+	animatePath();
 }
 
 function animatePath() {
+	
+	requestAnimationFrame(animatePath);
+	
+	if (!pathMode) {
+		nrOp = 0;
+		crrOp = 0;
+		edgeColorReset();
+		nodeColorReset();
+		return;
+	}
+	if (!pathPlay)	return;
 
+	now2 = Date.now();
+	elapsed2 = now2 - then2;
+
+	if (elapsed2 > fpsInterval2) {
+		then2 = now2 - (elapsed2 % fpsInterval2);
+		
+		//console.log("avem frame: " + pathMode + " " + pathPlay + " " + nrOp + " " + crrOp);	
+
+		if (crrOp < nrOp)	nextOp();	
+	}
 }
 
 function makeDirected() {
 	directed = 1;
+	resetPlayer();
 	document.getElementById("directedStatus").innerHTML = "YES DIRECTED";
 	document.getElementById("directedStatus").style.color = "green";
 	document.getElementById("directedStatus2").innerHTML = "NOT UNDIRECTED";
@@ -836,6 +1137,7 @@ function makeDirected() {
 }
 function makeUndirected() {
 	directed = 0;
+	resetPlayer();
 	document.getElementById("directedStatus").innerHTML = "NOT DIRECTED";
 	document.getElementById("directedStatus").style.color = "red";
 	document.getElementById("directedStatus2").innerHTML = "YES UNDIRECTED";
@@ -1122,6 +1424,9 @@ function hideInpBox() {
 		if (edges[i].type == 1) {
 			edges[i].type = 0;
 			edges[i].leng = inpBox.value;
+			if (edges[i].leng > maxLeng)	edges[i].leng = maxLeng;
+			if (edges[i].leng < -maxLeng)	edges[i].leng = -maxLeng;
+			if (!isNumeric(edges[i].leng))	edges[i].leng = "";
 		}
 	}
 	inpBox.className = "canvasInput hidden";	
@@ -1138,6 +1443,14 @@ function hitEnterEsc(event) {
 
 function mouseDown() {
 	time = 0;
+	if (pathMode) {
+		for (var i = 0; i < nodeCnt; i++)
+			if (distAB(mX, mY, nodes[i].posX, nodes[i].posY) < ndRad * ndRad) {
+				nodes[i].grab = 1;
+				return;
+			}
+		return;
+	}
 	if (graphMode == "gravity") {
 		for (var i = 0; i < nodeCnt; i++)
 			if (distAB(mX, mY, nodes[i].posX, nodes[i].posY) < ndRad * ndRad) {
@@ -1173,6 +1486,37 @@ function mouseDown() {
 
 function mouseUp() {
   //console.log("AM FACUT UN CLICK   TIMPUL: " + time);
+	if (pathMode) {
+		for (var i = 0; i < nodeCnt; i++)	
+			if (distAB(mX, mY, nodes[i].posX, nodes[i].posY) < ndRad * ndRad) {
+				nodes[i].grab = 0;
+				if (time < clickTime) {
+					if (seen[i])	return;
+					if (pathAlg == "DFS") {
+						DFS(i, -1);
+						startAnimatePath();
+						return;
+					}
+					if (pathAlg == "BFS") {
+						BFS(i, -1);
+						startAnimatePath();
+						return;
+					}
+					if (pathAlg == "DJK") {
+						DJK(i);
+						startAnimatePath();
+					}
+					if (pathAlg == "MF") {
+						if (sMF == -1)	sMF = i;
+						else if (fMF == -1) {
+							fMF = i;
+							MF(sMF, fMF);
+						}
+					}
+				}
+			}
+		return;
+	}
 	if (graphMode == "gravity") {
 		for (var i = 0; i < nodeCnt; i++)
 			if (distAB(mX, mY, nodes[i].posX, nodes[i].posY) < ndRad * ndRad) {
@@ -1263,6 +1607,7 @@ function mouseUp() {
 			nodes[nodeCnt].grab = 0;
 			nodes[nodeCnt].type = 0;
 			nodes[nodeCnt].fix = 0;
+			nodes[nodeCnt].color = "black";
 			console.log("AM CREAT: " + nodeCnt);
 			nodeCnt++;
 			edges[edgeCnt] = new Object();
@@ -1470,7 +1815,7 @@ function drawGraph() {
 		
 		ctx.beginPath();
 		ctx.arc(nodes[i].posX, nodes[i].posY, ndRad, 0, 2 * Math.PI);	
-		ctx.strokeStyle = "black";
+		ctx.strokeStyle = nodes[i].color;
 		ctx.stroke();	
 		var str = document.getElementById("nodeBackColor").value;
 		ctx.fillStyle = str;
@@ -1526,7 +1871,10 @@ function addNode(id) {
 
 function updateGraphData() {
 	console.log("updateGraphData");
+	resetPlayer();
 	var txt = document.getElementById("graphData").value;
+	var textA = document.getElementById("graphData");
+
 	newEdges = [];
 	newNodes = [];
 	mapNd = {};
@@ -1548,6 +1896,8 @@ function updateGraphData() {
 				}
 				if (nrCnt == 3) {
 					newEdges[eC].leng = str;
+					if (newEdges[eC].leng > maxLeng)	newEdges[eC].leng = maxLeng;
+					if (newEdges[eC].leng < -maxLeng)	newEdges[eC].leng = -maxLeng;
 				}
 				if (nrCnt <= 2 && mapNd[str] == undefined) {
 					mapNd[str] = nC;
@@ -1593,6 +1943,7 @@ function updateGraphData() {
 			k++;	
 		}
 	}
+	var sumCh = 0;
 	for (var i = 0; i < eC; i++) {
 		if (edges[i] == undefined)	edges[i] = new Object();
 		edges[i].first = newEdges[i].first;
@@ -1605,6 +1956,18 @@ function updateGraphData() {
 		if (edges[i].trdX == undefined)	edges[i].trdX = 0;
 		if (edges[i].trdY == undefined)	edges[i].trdY = 0;
 		edges[i].color = "black";
+	
+		if (edges[i].first != undefined)	sumCh += edges[i].first.length + 1;
+		if (edges[i].second != undefined)	sumCh += edges[i].second.length + 1;
+		if (edges[i].leng != undefined)	sumCh += edges[i].leng.length + 1;
+
+		if (edges[i].leng.length > 0 && !isNumeric(edges[i].leng)) {
+			var ll = edges[i].leng.length;
+			edges[i].leng = "";
+			graphInputUpdate();
+			textA.focus();
+			textA.selectionEnd = sumCh - ll - 1;
+		}
 	}
 	for (var i = 0; i < nC; i++) {
 		nodes[i].vX = 0;
@@ -1613,6 +1976,7 @@ function updateGraphData() {
 		nodes[i].type = 0;
 		mapNd[nodes[i].name] = i;
 		if (nodes[i].fix == undefined)	nodes[i].fix = 0;
+		if (nodes[i].color == undefined)	nodes[i].color = "black";
 	}
 	if (nodeCnt > nC) {
 		for (var i = nC; i < nodeCnt; i++) {
@@ -1702,41 +2066,47 @@ function hideAllTabs() {
 	document.getElementById("configTab").className = "configTab hidden";
 }
 function selectPaths() {
+	pathMode = 1;
 	hideAllTabs();
 	document.getElementById("pathTab").className = "pathTab";
 }
 function selectHighLight() {
+	pathMode = 0;
 	hideAllTabs();
 	document.getElementById("highlightTab").className = "highlightTab";
 }
 function selectSort() {
+	pathMode = 0;
 	hideAllTabs();
 	document.getElementById("sortTab").className = "sortTab";
 }
 function selectConfig() {
+	pathMode = 0;
 	hideAllTabs();
 	document.getElementById("configTab").className = "configTab";
 }
 function selectGravity() {
+	pathMode = 0;
 	graphMode = "gravity";
 	hideAllTabs();
 	document.getElementById("gravityTab").className = "gravityTab";
 }
 function selectEdit() {
+	pathMode = 0;
 	graphMode = "edit";
 	hideAllTabs();
 	document.getElementById("editTab").className = "editTab";
 	inpBox = document.getElementById("inputBox");
 }
 function selectDraw() {
+	pathMode = 0;
 	graphMode = "draw";
 	hideAllTabs();
 	document.getElementById("drawTab").className = "drawTab";
 }
 function selectDelete() {
+	pathMode = 0;
 	graphMode = "delete";
 	hideAllTabs();
 	document.getElementById("deleteTab").className = "deleteTab";
 }
-
-
