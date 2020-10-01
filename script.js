@@ -32,7 +32,7 @@ var shuffle = [], edMF = [], dad = [];
 var stepX, stepY, nrLeaf, topN, stkEdTp, stkNdTp, nrC;
 var mnCC = 0, mxCC = 321, pathPlay = 1, crrOp = 0, nrOp;
 var pathOpQue = [];
-var firstCol = "#FF0000", secondCol = "#00FF00", pathMode = 0, pathAlg, sMF, fMF;
+var firstCol = "#FF0000", secondCol = "#00FF00", pathMode = 0, pathMode = -1, pathAlg, sMF, fMF;
 var FPS2 = 1.5, fpsInterval2, now2, then2, elapsed2, minFPS2 = 0.5, maxFPS2 = 8;
 
 timeLoop();
@@ -1100,13 +1100,14 @@ function startAnimatePath() {
 }
 
 function animatePath() {
-	
 	requestAnimationFrame(animatePath);
 	
 	if (!pathMode) {
 		nrOp = 0;
 		crrOp = 0;
-		edgeColorReset();
+		if (!pathHigh) {
+			edgeColorReset();
+		}
 		nodeColorReset();
 		return;
 	}
@@ -1117,7 +1118,6 @@ function animatePath() {
 
 	if (elapsed2 > fpsInterval2) {
 		then2 = now2 - (elapsed2 % fpsInterval2);
-		
 		//console.log("avem frame: " + pathMode + " " + pathPlay + " " + nrOp + " " + crrOp);	
 
 		if (crrOp < nrOp)	nextOp();	
@@ -2067,32 +2067,38 @@ function hideAllTabs() {
 }
 function selectPaths() {
 	pathMode = 1;
+	pathHigh = 0;
 	hideAllTabs();
 	document.getElementById("pathTab").className = "pathTab";
 }
 function selectHighLight() {
 	pathMode = 0;
+	pathHigh = 1;
 	hideAllTabs();
 	document.getElementById("highlightTab").className = "highlightTab";
 }
 function selectSort() {
 	pathMode = 0;
+	pathHigh = 0;
 	hideAllTabs();
 	document.getElementById("sortTab").className = "sortTab";
 }
 function selectConfig() {
 	pathMode = 0;
+	pathHigh = 0;
 	hideAllTabs();
 	document.getElementById("configTab").className = "configTab";
 }
 function selectGravity() {
 	pathMode = 0;
+	pathHigh = 0;
 	graphMode = "gravity";
 	hideAllTabs();
 	document.getElementById("gravityTab").className = "gravityTab";
 }
 function selectEdit() {
 	pathMode = 0;
+	pathHigh = 0;
 	graphMode = "edit";
 	hideAllTabs();
 	document.getElementById("editTab").className = "editTab";
@@ -2100,12 +2106,14 @@ function selectEdit() {
 }
 function selectDraw() {
 	pathMode = 0;
+	pathHigh = 0;
 	graphMode = "draw";
 	hideAllTabs();
 	document.getElementById("drawTab").className = "drawTab";
 }
 function selectDelete() {
 	pathMode = 0;
+	pathHigh = 0;
 	graphMode = "delete";
 	hideAllTabs();
 	document.getElementById("deleteTab").className = "deleteTab";
