@@ -1508,7 +1508,7 @@ function mouseUp() {
 					}
 					if (pathAlg == "MF") {
 						if (sMF == -1)	sMF = i;
-						else if (fMF == -1) {
+						else if (fMF == -1 && i != sMF) {
 							fMF = i;
 							MF(sMF, fMF);
 						}
