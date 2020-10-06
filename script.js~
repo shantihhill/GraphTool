@@ -992,9 +992,16 @@ function updateMF(s, f) {
 
 function MF(s, f) {
 	while (buildMF(s, f)) {
-		for (var i = 0; i < nrEd[f]; i++) {
-			dad[f] = vecNd[f][i];
-			updateMF(s, f);
+		console.log("build:");
+		
+		for (var i = 0; i < nodeCnt; i++) {
+			for (var j = 0; j < nrEd[i]; j++) {
+				if (vecNd[i][j] == f)	{
+					dad[f] = i;
+					updateMF(s, f);
+					break;
+				}
+			}
 		}
 	}
 }
@@ -1014,18 +1021,14 @@ function pathMF() {
 		}
 	}
 	for (var i = 0; i < edgeCnt; i++) {
+		if (edges[i].second == undefined || edges[i].second.length == 0)	continue;	
+		if (newEdges[i] == undefined)	newEdges[i] = new Object();
 		newEdges[i].leng = edges[i].leng;
 		var x1 = mapNd[edges[i].first], x2 = mapNd[edges[i].second];
 		if (edges[i].leng == undefined || edges[i].leng.length == 0)	edMF[x1][x2] = 0;
 		else edMF[x1][x2] = parseInt(edges[i].leng);
 		if (!directed) {
 			edMF[x2][x1] = edMF[x1][x2];
-		}
-	}
-
-	for (var i = 0; i < nodeCnt; i++) {
-		for (var j = 0; j < nodeCnt; j++) {
-			console.log(edMF[i][j]);
 		}
 	}
 }

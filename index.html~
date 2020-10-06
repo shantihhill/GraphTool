@@ -36,8 +36,10 @@
 				<button class="buttonComm" type="button" onclick="selectPaths()"> Paths </button>		
 				<button class="buttonComm" type="button" onclick="selectHighLight()"> Highlight </button>		
 				<button class="buttonComm" type="button" onclick="selectSort()"> Sort </button>		
-				<button class="buttonComm" type="button" onclick="selectConfig()"> Config </button>		
-			</div>	
+			</div>
+			<div class="buttonGroupComm">
+				<button class="buttonComm" type="button" onclick="selectConfig()"> Settings </button>		
+			</div>
 		</div>
 
 		<div class="makeGraph">
@@ -77,20 +79,20 @@
 					<p class="p75Br"></p>
 					<ul>
 						<li> Drag and Drop nodes in canvas.</li>	
-						<li> Click to fix/unfix a nodes position.</li>
+						<li> Click to fix/unfix node position.</li>
 					</ul>
 				</div>
 
 				<div class="editTab hidden" id="editTab">
 					<h3> Edit Mode </h3>
 					<p class="p75Br"></p>
-					<p> In edit mode, you can easily change a nodes or edges label. Click on a node/edge and start typing the new value. Hit Enter or Esc or click somewhere else in order to process the input.</p>
+					<p> In edit mode, you can easily change node or edge labels. Click on a node/edge and start typing the new value. Hit Enter or Esc or click somewhere else in order to process the input.</p>
 					<p class="p75Br"></p>
 					<p> Ways to interact with the graph: </p>
 					<p class="p75Br"></p>
 					<ul>
-						<li> Click on node to modify </li>
-						<li> Click on edge to modify </li>
+						<li> Click on node to modify. </li>
+						<li> Click on edge to modify. </li>
 				</div>
 
 				<div class="drawTab hidden" id="drawTab">
@@ -102,14 +104,14 @@
 					<p class="p75Br"></p>
 					<ul>
 						<li> Click on the canvas to add new node. </li>
-						<li> Click a node followed by another node to draw a new edge. </li>
+						<li> Click two nodes to draw a new edge. </li>
 					<ul>
 				</div>
 
 				<div class="deleteTab hidden" id="deleteTab">
 					<h3> Delete Mode </h3>
 					<p class="p75Br"></p>
-					<p> In delete mode, you can make changes to the graph by deleting edges or nodes by clicking on them. </p>
+					<p> In delete mode, you can make changes to the graph by clicking on edges or nodes. This will delete the selected object. </p>
 					<p class="p75Br"></p>
 					<p> Ways to interact with the graph: </p>
 					<p class="p75Br"></p>
@@ -206,7 +208,7 @@
 				</div>
 
 				<div class="configTab hidden" id="configTab">
-					<h3> Configuration tab </h3>
+					<h3> Settings tab </h3>
 					<p class="p75Br"></p>
 					<label class="configInput" for="nodeSize">Node size:</label>											
 					<input type="text" id="nodeSize" class="configInput" value="30" onkeyup="updateNodeSize()">
@@ -240,6 +242,11 @@
 						<option value="Blue">Blue</option>	
 						<option value="Violet">Violet</option>	
 					</select>	
+					<br>
+					<br>
+					<p style="font-size:1.2vw"><strong>Source:</strong></p>
+					<p class="halfBr"></p>
+					<p> <a href="https://github.com/shantihhill">https://github.com/shantihhill <a></p>
 				</div>	
 			</div>	
 		</div>

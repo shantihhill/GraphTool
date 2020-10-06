@@ -74,7 +74,7 @@ ul {
 	margin-right: 0vw;
 	margin-bottom: 0;
 	background-color: #000099;
-	padding: 0.5vw;
+	padding: 0.2vw;
 	border-radius: 1vw;
 	border: 0;
 	font-size: 0;
