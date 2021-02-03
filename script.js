@@ -32,7 +32,7 @@ var shuffle = [], edMF = [], dad = [];
 var stepX, stepY, nrLeaf, topN, stkEdTp, stkNdTp, nrC;
 var mnCC = 0, mxCC = 321, pathPlay = 1, crrOp = 0, nrOp;
 var pathOpQue = [];
-var firstCol = "#FF0000", secondCol = "#00FF00", pathMode = 0, pathMode = -1, pathAlg, sMF, fMF;
+var firstCol = "#FF0000", secondCol = "#00FF00", pathMode = 0, pathHigh = 0, pathAlg, sMF, fMF;
 var FPS2 = 1.5, fpsInterval2, now2, then2, elapsed2, minFPS2 = 0.5, maxFPS2 = 8;
 
 timeLoop();
@@ -42,6 +42,8 @@ updateGraphData();
 graphInputUpdate();
 
 makeUndirected();
+
+selectGravity();
 
 setFrameRate();
 
@@ -875,6 +877,8 @@ function pathBFS() {
 }
 
 function DJK(n) {
+
+	if (nodes[n].color == firstCol || nodes[n].color == secondCol)	return;	
 	var ok = 1, queN = 0, mnDis = maxInt, idDis = -1;
 	estq[n] = ++queN;
 	dist[n] = 0;
@@ -906,7 +910,6 @@ function DJK(n) {
 			var vx = vecNd[x][i];
 			var vy = vecEd[x][i];	
 			var vz = dist[x] + parseInt(edges[vy].leng);
-			console.log("incercam: " + vx + " d: " + vz + " dd: " + dist[vx] + " estq: " + estq[vx]);
 			if (low[vx])	continue;
 			if (estq[vx] == maxInt)	{
 				estq[vx] = ++queN;	
@@ -917,7 +920,6 @@ function DJK(n) {
 				dist[vx] = vz;
 				zEd[vx] = vy;
 			}
-			console.log("incercam: " + vx + " d: " + vz + " dd: " + dist[vx] + " estq: " + estq[vx]);
 		}
 	}
 }
@@ -949,7 +951,7 @@ function buildMF(s, f) {
 		n0++;
 		for (var i = 0; i < nrEd[x]; i++) {
 			var vx = vecNd[x][i];
-			if (edMF[x][vx] == 0)	continue;
+			if (edMF[x][vx] <= 0)	continue;
 			if (dad[vx] == -1) {
 				dad[vx] = x;
 				zEd[vx] = vecEd[x][i];
@@ -963,13 +965,14 @@ function buildMF(s, f) {
 
 function updateMF(s, f) {
 	var x = f, x0 = 0, z, mn = maxInt;
-	while (x != s) {
+	while (x != s && x != -1) {
 		x0 = dad[x];	
 		low[x0] = x;
 		mn = Math.min(mn, edMF[x0][x]);
 		x = x0;
 	}
-	if (mn == 0)	return;
+	if (mn <= 0)	return;
+	if (x == -1)	return;
 	x = f;
 	addPathOp("node", f, firstCol);
 	while (x != s) {
@@ -992,12 +995,11 @@ function updateMF(s, f) {
 
 function MF(s, f) {
 	while (buildMF(s, f)) {
-		console.log("build:");
-		
 		for (var i = 0; i < nodeCnt; i++) {
 			for (var j = 0; j < nrEd[i]; j++) {
-				if (vecNd[i][j] == f)	{
+				if (vecNd[i][j] == f && dad[i] != f)	{
 					dad[f] = i;
+					zEd[f] = vecEd[i][j];
 					updateMF(s, f);
 					break;
 				}
@@ -1122,7 +1124,6 @@ function animatePath() {
 	if (elapsed2 > fpsInterval2) {
 		then2 = now2 - (elapsed2 % fpsInterval2);
 		//console.log("avem frame: " + pathMode + " " + pathPlay + " " + nrOp + " " + crrOp);	
-
 		if (crrOp < nrOp)	nextOp();	
 	}
 }
@@ -1856,7 +1857,6 @@ function animate() {
 		for (var i = 0; i < nodeCnt; i++) {
 			updateNodePos(i);
 		}
-//	console.log("AM DESENAT");	
 		drawGraph();
 	}
 }
@@ -1918,8 +1918,8 @@ function updateGraphData() {
 	}
 	if (newEdges[eC].first != undefined)	eC++;
 	
-	console.log("nodeCnt " + nodeCnt);
-	console.log("nodeCnt " + nC);
+	//console.log("nodeCnt " + nodeCnt);
+	//console.log("nodeCnt " + nC);
 	var k = 0;
 	for (var i = 0; i < nodeCnt; i++) {
 		var ok = 0;
@@ -2000,18 +2000,18 @@ function updateGraphData() {
 	nodeCnt = nC;
 	edgeCnt = eC;
 	
-	console.log("am modificat datele grafului");	
-	console.log("noduri si mucii \n");
-	console.log(nodeCnt + '\n');	
-	console.log(edgeCnt + '\n');	
-	console.log("hsi sa vedem muchiiile");
-	for (var i = 0; i < edgeCnt; i++) {
-		console.log(edges[i].first + ' ' + edges[i].second + ' ' + edges[i].leng);	
-	} 
-	console.log("hai sa vedem nodurile");
-	for (var i = 0; i < nodeCnt; i++) {
-		console.log(nodes[i].name + " " + nodes[i].posX + " " + nodes[i].posY + " " + nodes[i].vX + " " + nodes[i].vY);
-	}
+	//console.log("am modificat datele grafului");	
+	//console.log("noduri si mucii \n");
+	//console.log(nodeCnt + '\n');	
+	//console.log(edgeCnt + '\n');	
+	//console.log("hsi sa vedem muchiiile");
+	//for (var i = 0; i < edgeCnt; i++) {
+		//console.log(edges[i].first + ' ' + edges[i].second + ' ' + edges[i].leng);	
+	//} 
+	//console.log("hai sa vedem nodurile");
+	//for (var i = 0; i < nodeCnt; i++) {
+		//console.log(nodes[i].name + " " + nodes[i].posX + " " + nodes[i].posY + " " + nodes[i].vX + " " + nodes[i].vY);
+	//}
 	document.getElementById("nodeCount").value = nodeCnt;
 
 	ct = 0;
